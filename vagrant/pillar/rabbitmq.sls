@@ -1,6 +1,10 @@
 rabbitmq:
   erlang_cookie: SomeRandomCookie
   
+  plugins:
+    - rabbitmq_management
+    - rabbitmq_management_visualiser
+
   ssl:
     enabled: false
     cacert: |

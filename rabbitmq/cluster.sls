@@ -22,6 +22,7 @@ rabbitmq-join-cluster:
     - nodes: {{ salt['pillar.get']('rabbitmq:nodes', []) }}
     - require:
       - pkg: rabbitmq-server
-      - rabbitmq_plugin: rabbitmq_management
-      - rabbitmq_plugin: rabbitmq_management_visualiser
+{% for name in salt['pillar.get']('rabbitmq:plugins', []) %}
+      - rabbitmq_plugin: {{ name }}
+{% endfor -%}
 {% endif -%}

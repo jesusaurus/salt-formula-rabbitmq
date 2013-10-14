@@ -154,19 +154,14 @@ rabbitmq:
     - require:
       - file: /etc/rabbitmq
 
-rabbitmq-rabbitmq_management-plugin:
+{% for name in salt['pillar.get']('rabbitmq:plugins', []) -%}
+"{{ name }}-rabbitmq-plugin":
   rabbitmq_plugin:
     - enabled
-    - name: rabbitmq_management
+    - name: "{{ name }}"
     - require:
       - pkg: rabbitmq-server
-
-rabbitmq-rabbitmq_management_visualiser-plugin:
-  rabbitmq_plugin:
-    - enabled
-    - name: rabbitmq_management_visualiser
-    - require:
-      - pkg: rabbitmq-server
+{% endfor -%}
 
 rabbitmq-server:
   pkg:
@@ -180,6 +175,9 @@ rabbitmq-server:
     - enable: True
     - require:
       - pkg: rabbitmq-server
+{% if salt['pillar.get']('rabbitmq:plugins', false) %}
     - watch:
-      - rabbitmq_plugin: rabbitmq_management
-      - rabbitmq_plugin: rabbitmq_management_visualiser
+{% for name in salt['pillar.get']('rabbitmq:plugins', []) %}
+      - rabbitmq_plugin: "{{ name }}"
+{% endfor -%}
+{% endif -%}
