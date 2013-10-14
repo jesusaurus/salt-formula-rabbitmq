@@ -13,5 +13,5 @@
 #    under the License.
 #
 base:
-  '*':
+  'vagrant-rabbitmq':
     - rabbitmq

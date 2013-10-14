@@ -20,10 +20,12 @@
     {vm_memory_high_watermark, {{ salt['pillar.get']('rabbitmq:vm_memory_high_watermark', '0.75') }}},
     {memory_alarms, true},
     {disk_free_limit, {mem_relative, 1.0}},
-    {cluster_partition_handling, {{ salt['pillar.get']('rabbitmq:cluster_partition_handling', 'pause_minority') }}},
-    {cluster_nodes, {[{%- for node in nodes -%}'rabbit@{{ node }}'{%- if not loop.last -%}, {%- endif -%}{%- endfor -%}], disc}},
+    {cluster_partition_handling, {{ salt['pillar.get']('rabbitmq:cluster_partition_handling', 'pause_minority') }}}
+{%- if salt['pillar.get']('rabbitmq:nodes', False) -%}
+    ,{cluster_nodes, {[{%- for node in nodes -%}'rabbit@{{ node }}'{%- if not loop.last -%}, {%- endif -%}{%- endfor -%}], disc}},
+{%- endif -%}
 {%- if salt['pillar.get']('rabbitmq:ssl:enabled', false) -%}
-    {ssl_listeners, [5671]},
+    ,{ssl_listeners, [5671]},
     {ssl_options, [
       {cacertfile,"/etc/rabbitmq/ssl/cacert.pem"},
       {certfile,"/etc/rabbitmq/ssl/cert.pem"},
