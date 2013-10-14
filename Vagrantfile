@@ -11,10 +11,10 @@ Vagrant.configure("2") do |config|
   config.vm.synced_folder "vagrant/pillar", "/srv/pillar/"
 
   # Setup some port forwards:
-  config.vm.network "forwarded_port", guest: 5671, host: 5671    # AMQP SSL
-  config.vm.network "forwarded_port", guest: 5672, host: 5672    # AMQP
-  config.vm.network "forwarded_port", guest: 15671, host: 15671  # Management UI SSL
-  config.vm.network "forwarded_port", guest: 15672, host: 15672  # Management UI
+  #config.vm.network "forwarded_port", guest: 5671, host: 5671    # AMQP SSL
+  #config.vm.network "forwarded_port", guest: 5672, host: 5672    # AMQP
+  #config.vm.network "forwarded_port", guest: 15671, host: 15671  # Management UI SSL
+  #config.vm.network "forwarded_port", guest: 15672, host: 15672  # Management UI
 
 
   ## Provision the VM using Salt
