@@ -1,85 +1,91 @@
 # -*- coding: utf-8 -*-
-# author: Bruno Clermont <patate@fastmail.cn>
-
 '''
-RabbitMQ plugins state
+Manage RabbitMQ Plugins.
+
+.. code-block:: yaml
+
+    some_plugin:
+        rabbitmq_plugin:
+          - enabled
 '''
 
-from salt import exceptions, utils
+# Import python libs
+import logging
+
+log = logging.getLogger(__name__)
+
 
 def __virtual__():
     '''
-    Verify RabbitMQ is installed.
+    Only load if RabbitMQ is installed.
     '''
     name = 'rabbitmq_plugin'
-    try:
-        utils.check_or_die('rabbitmq-plugins')
-    except exceptions.CommandNotFoundError:
+    if not __salt__['cmd.has_exec']('rabbitmqctl'):
         name = False
     return name
 
-def disabled(name, runas='root', env=None):
+
+def enabled(name, runas=None):
     '''
-    Make sure that a plugin is not enabled.
+    Ensure the RabbitMQ plugin is enabled.
 
     name
-        The name of the plugin to disable
+        The name of the plugin
+    runas
+        The user to run the rabbitmq-plugin command as
     '''
-    ret = {'name': name, 'result': None, 'comment': '', 'changes': {}}
+
+    ret = {'name': name, 'result': True, 'comment': '', 'changes': {}}
+    result = {}
+
+    if __salt__['rabbitmq.plugin_is_enabled'](name, runas=runas):
+        ret['comment'] = 'Plugin {0} is already enabled'.format(name)
+        return ret
 
     if __opts__['test']:
-        ret['comment'] = 'The plugin {0} would have been disabled'.format(name)
-        return ret
-
-    plugins = __salt__['rabbitmq_plugins.list'](env=env, runas=runas)
-    if name not in plugins:
-        ret['result'] = True
-        ret['comment'] = 'Plugin is not available to disable.'
-        return ret
-
-    if plugins[name]['state'] == ' ':
-        ret['result'] = True
-        ret['comment'] = 'Plugin is already disabled.'
-        return ret
-
-    if __salt__['rabbitmq_plugins.disable'](name, env=env, runas=runas):
-        ret['result'] = True
-        ret['changes'][name] = 'Disabled'
-        ret['comment'] = 'Plugin was successfully disabled.'
+        ret['result'] = None
+        ret['comment'] = 'Plugin {0} is set to be enabled'.format(name)
     else:
+        result = __salt__['rabbitmq.enable_plugin'](name, runas=runas)
+
+    if 'Error' in result:
         ret['result'] = False
-        ret['comment'] = 'Could not disable plugin.'
+        ret['comment'] = result['Error']
+    elif 'Enabled' in result:
+        ret['comment'] = result['Enabled']
+        ret['changes'] = {'old': '', 'new': name}
+
     return ret
 
-def enabled(name, runas='root', env=None):
+
+def disabled(name, runas=None):
     '''
-    Make sure that a plugin is enabled.
+    Ensure the RabbitMQ plugin is enabled.
 
     name
-        The name of the plugin to enable
+        The name of the plugin
+    runas
+        The user to run the rabbitmq-plugin command as
     '''
-    ret = {'name': name, 'result': None, 'comment': '', 'changes': {}}
+
+    ret = {'name': name, 'result': True, 'comment': '', 'changes': {}}
+    result = {}
+
+    if not __salt__['rabbitmq.plugin_is_enabled'](name, runas=runas):
+        ret['comment'] = 'Plugin {0} is not enabled'.format(name)
+        return ret
 
     if __opts__['test']:
-        ret['comment'] = 'The plugin {0} would have been enabled'.format(name)
-        return ret
-
-    plugins = __salt__['rabbitmq_plugins.list'](env=env, runas=runas)
-    if name not in plugins:
-        ret['result'] = True
-        ret['comment'] = 'Plugin is not available to enable.'
-        return ret
-
-    if plugins[name]['state'] != ' ':
-        ret['result'] = True
-        ret['comment'] = 'Plugin is already enabled.'
-        return ret
-
-    if __salt__['rabbitmq_plugins.enable'](name, env=env, runas=runas):
-        ret['result'] = True
-        ret['changes'][name] = 'Enabled'
-        ret['comment'] = 'Plugin was successfully enabled.'
+        ret['result'] = None
+        ret['comment'] = 'Plugin {0} is set to be disabled'.format(name)
     else:
+        result = __salt__['rabbitmq.disable_plugin'](name, runas=runas)
+
+    if 'Error' in result:
         ret['result'] = False
-        ret['comment'] = 'Could not enable plugin.'
+        ret['comment'] = result['Error']
+    elif 'Disabled' in result:
+        ret['comment'] = result['Disabled']
+        ret['changes'] = {'new': '', 'old': name}
+
     return ret

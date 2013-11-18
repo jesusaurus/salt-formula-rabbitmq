@@ -12,6 +12,11 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 #
+
+include:
+  - rabbitmq.network
+
+{% if salt['pillar.get']('rabbitmq:use_upstream_repo', False) %}
 rabbitmq-repo:
   pkgrepo:
     - managed
@@ -20,26 +25,9 @@ rabbitmq-repo:
     - file: /etc/apt/sources.list.d/rabbitmq.list
     - name: deb http://www.rabbitmq.com/debian testing main
     - key_url: http://www.rabbitmq.com/rabbitmq-signing-key-public.asc
-
-net.ipv4.tcp_keepalive_time:
-  sysctl.present:
-    - value: 10
-
-net.ipv4.tcp_keepalive_probes:
-  sysctl.present:
-    - value: 3
-
-net.ipv4.tcp_keepalive_intvl:
-  sysctl.present:
-    - value: 5
-
-networking:
-  service:
-    - enabled
-    - watch:
-      - sysctl: net.ipv4.tcp_keepalive_time
-      - sysctl: net.ipv4.tcp_keepalive_intvl
-      - sysctl: net.ipv4.tcp_keepalive_probes
+    - require_in:
+      - pkg: rabbitmq-server
+{% endif %}
 
 rabbitmq:
   group:
@@ -141,6 +129,28 @@ rabbitmq:
       - group: rabbitmq
       - file: /var/lib/rabbitmq
 
+{% if salt['pillar.get']('rabbitmq:mnesia_base', False) %}
+{{ salt['pillar.get']('rabbitmq:mnesia_base') }}:
+  file:
+    - directory
+    - makedirs: True
+    - user: rabbitmq
+    - group: rabbitmq
+    - require:
+      - user: rabbitmq
+{% endif %}
+
+{% if salt['pillar.get']('rabbitmq:log_base', False) %}
+{{ salt['pillar.get']('rabbitmq:log_base') }}:
+  file:
+    - directory
+    - makedirs: True
+    - user: rabbitmq
+    - group: rabbitmq
+    - require:
+      - user: rabbitmq
+{% endif %}
+
 /etc/rabbitmq/rabbitmq.config:
   file:
     - managed
@@ -154,6 +164,18 @@ rabbitmq:
     - require:
       - file: /etc/rabbitmq
 
+/etc/rabbitmq/rabbitmq-env.conf:
+  file:
+    - managed
+    - source: salt://rabbitmq/templates/rabbitmq-env.conf.jinja
+    - template: jinja
+
+/etc/default/rabbitmq-server:
+  file:
+    - managed
+    - source: salt://rabbitmq/templates/rabbitmq-server.default.jinja
+    - template: jinja
+
 {% for name in salt['pillar.get']('rabbitmq:plugins', []) -%}
 "{{ name }}-rabbitmq-plugin":
   rabbitmq_plugin:
@@ -165,9 +187,8 @@ rabbitmq:
 
 rabbitmq-server:
   pkg:
-    - latest
+    - installed
     - require:
-      - pkgrepo: rabbitmq-repo
       - file: /etc/rabbitmq/rabbitmq.config
       - file: /var/lib/rabbitmq/.erlang.cookie
   service:
@@ -181,3 +202,26 @@ rabbitmq-server:
       - rabbitmq_plugin: "{{ name }}"
 {% endfor -%}
 {% endif -%}
+
+{% if salt['pillar.get']('rabbitmq:remove_guest', False) %}
+rabbitmq-remove-guest:
+  rabbitmq_user:
+    - absent
+    - name: guest
+    - requires:
+      - service: rabbitmq-server
+{% endif %}
+
+rabbitmq-admin-user:
+  rabbitmq_user:
+    - present
+    - name: {{ salt['pillar.get']('rabbitmq:admin:user', 'admin') }}
+    - password: {{ salt['pillar.get']('rabbitmq:admin:password', 'adminPassword') }}
+    - tags: administrator
+    - permissions:
+      - '/':
+        - '.*'
+        - '.*'
+        - '.*'
+    - require:
+      - service: rabbitmq-server

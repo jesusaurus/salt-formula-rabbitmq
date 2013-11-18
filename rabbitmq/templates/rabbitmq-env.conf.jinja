@@ -1,0 +1,2 @@
+RABBITMQ_MNESIA_BASE={{ salt['pillar.get']('rabbitmq:mnesia_base', '/var/lib/rabbitmq/mnesia') }}
+RABBITMQ_LOG_BASE={{ salt['pillar.get']('rabbitmq:log_base', '/var/log/rabbitmq') }}

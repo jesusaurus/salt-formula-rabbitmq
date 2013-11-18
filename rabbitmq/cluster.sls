@@ -15,11 +15,26 @@
 include:
   - rabbitmq
 
+{% set policies = salt['pillar.get']('rabbitmq:policies', False) -%}
+{% if policies -%}
+{% for name, policy in policies.iteritems() -%}
+rabbit-policy-{{ policy }}:
+  rabbitmq_policy:
+    - present
+    - name: {{ name }}
+    - pattern: {{ policy['pattern'] }}
+    - definition: {{ policy['definition'] }}
+    - require:
+      - pkg: rabbitmq-server
+{% endfor %}
+{% endif %}
+
 {% if salt['pillar.get']('rabbitmq:nodes', False) -%}
+{% set host = salt['pillar.get']('rabbitmq:nodes', ['NoNodesInPillar'])[0] -%}
 rabbitmq-join-cluster:
   rabbitmq_cluster:
-    - joined
-    - nodes: {{ salt['pillar.get']('rabbitmq:nodes', []) }}
+    - join
+    - host: {{ host }}
     - require:
       - pkg: rabbitmq-server
 {% for name in salt['pillar.get']('rabbitmq:plugins', []) %}

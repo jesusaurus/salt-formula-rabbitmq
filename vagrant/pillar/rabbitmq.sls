@@ -1,9 +1,20 @@
 rabbitmq:
   erlang_cookie: SomeRandomCookie
+
+  policies:
+    hp-all:
+      pattern: '.*'
+      definition: '{"ha-mode":"all", "ha-sync-mode":"automatic"}'
   
   plugins:
     - rabbitmq_management
     - rabbitmq_management_visualiser
+
+  mnesia_base: /mnt/rabbitmq/mnesia
+
+  admin:
+    user: admin
+    password: adminPassword
 
   ssl:
     enabled: false

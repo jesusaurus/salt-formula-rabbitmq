@@ -22,7 +22,7 @@
     {disk_free_limit, {mem_relative, 1.0}},
     {cluster_partition_handling, {{ salt['pillar.get']('rabbitmq:cluster_partition_handling', 'pause_minority') }}}
 {%- if salt['pillar.get']('rabbitmq:nodes', False) -%}
-    ,{cluster_nodes, {[{%- for node in nodes -%}'rabbit@{{ node }}'{%- if not loop.last -%}, {%- endif -%}{%- endfor -%}], disc}},
+    ,{cluster_nodes, {[{%- for node in nodes -%}'rabbit@{{ node }}'{%- if not loop.last -%}, {%- endif -%}{%- endfor -%}], disc}}
 {%- endif -%}
 {%- if salt['pillar.get']('rabbitmq:ssl:enabled', false) -%}
     ,{ssl_listeners, [5671]},
