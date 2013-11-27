@@ -2,7 +2,7 @@ rabbitmq:
   erlang_cookie: SomeRandomCookie
 
   policies:
-    hp-all:
+    ha-all:
       pattern: '.*'
       definition: '{"ha-mode":"all", "ha-sync-mode":"automatic"}'
   
