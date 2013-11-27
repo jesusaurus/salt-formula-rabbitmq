@@ -18,7 +18,7 @@ include:
 {% set policies = salt['pillar.get']('rabbitmq:policies', False) -%}
 {% if policies -%}
 {% for name, policy in policies.iteritems() -%}
-rabbit-policy-{{ policy }}:
+rabbit-policy-{{ name }}:
   rabbitmq_policy:
     - present
     - name: {{ name }}
