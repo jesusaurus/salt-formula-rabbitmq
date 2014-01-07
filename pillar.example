@@ -1,0 +1,24 @@
+rabbitmq:
+  erlang_cookie: MyCookier
+
+  plugins:
+    - rabbitmq_management
+    - rabbitmq_management_visualiser
+
+  # nodes:
+  #   - rabbitmq1
+  #   - rabbitmq2
+  #   - rabbitmq3
+
+  users:
+    guest:
+      state: absent
+
+    admin:
+      password: secret-password
+      tags: administrator
+      perms:
+        - '/':
+          - '.*'
+          - '.*'
+          - '.*'

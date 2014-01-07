@@ -113,6 +113,9 @@ def add_user(name, password, runas=None):
 
         salt '*' rabbitmq.add_user rabbit_user password
     '''
+    if password is None:
+      return _format_response('A password is required', 'Error')
+
     res = __salt__['cmd.run'](
         'rabbitmqctl add_user {0} \'{1}\''.format(name, password),
         runas=runas)

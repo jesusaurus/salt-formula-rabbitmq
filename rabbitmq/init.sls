@@ -203,6 +203,28 @@ rabbitmq-server:
 {% endfor -%}
 {% endif -%}
 
+{% set users = salt['pillar.get']('rabbitmq:users', False) -%}
+{% if users -%}
+
+{# If the "users" pillar is present, we use it over the older remove_guest
+   and hardcoded admin account #}
+
+{% for name, user in users.iteritems() -%}
+rabbit-{{ name }}-user:
+  rabbitmq_user:
+    - {{ user.get('state', 'present') }}
+    - name: {{ name }}
+    - password: {{ user.get('password', '~') }}
+    - tags:  {{ user.get('tags', '~') }}
+    - perms: {{ user.get('perms', []) | yaml }}
+    - require:
+      - service: rabbitmq-server
+{% endfor %}
+
+{% else -%}
+
+{# Fallback to the older remove_guest and hardcoded admin account #}
+
 {% if salt['pillar.get']('rabbitmq:remove_guest', False) %}
 rabbitmq-remove-guest:
   rabbitmq_user:
@@ -218,10 +240,12 @@ rabbitmq-admin-user:
     - name: {{ salt['pillar.get']('rabbitmq:admin:user', 'admin') }}
     - password: {{ salt['pillar.get']('rabbitmq:admin:password', 'adminPassword') }}
     - tags: administrator
-    - permissions:
+    - perms:
       - '/':
         - '.*'
         - '.*'
         - '.*'
     - require:
       - service: rabbitmq-server
+
+{% endif -%}
