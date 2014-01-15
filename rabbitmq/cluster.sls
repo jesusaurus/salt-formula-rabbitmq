@@ -22,8 +22,8 @@ rabbit-policy-{{ name }}:
   rabbitmq_policy:
     - present
     - name: {{ name }}
-    - pattern: {{ policy['pattern'] }}
-    - definition: {{ policy['definition'] }}
+    - pattern: '{{ policy['pattern'] }}'
+    - definition: '{{ policy['definition'] }}'
     - require:
       - pkg: rabbitmq-server
 {% endfor %}
