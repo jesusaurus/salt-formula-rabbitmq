@@ -10,6 +10,18 @@ rabbitmq:
   #   - rabbitmq2
   #   - rabbitmq3
 
+  vhosts:
+    '/':
+      state: absent
+
+    '/bla': {}
+
+  policies:
+    central:
+      vhost: '/bla'
+      pattern: '^central\.'
+      definition: '{"ha-mode": "all", "ha-sync-mode": "automatic", "message-ttl": 1800000}'
+
   users:
     guest:
       state: absent
@@ -18,7 +30,7 @@ rabbitmq:
       password: secret-password
       tags: administrator
       perms:
-        - '/':
+        - '/bla':
           - '.*'
           - '.*'
           - '.*'

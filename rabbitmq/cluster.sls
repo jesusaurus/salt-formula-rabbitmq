@@ -20,8 +20,9 @@ include:
 {% for name, policy in policies.iteritems() -%}
 rabbit-policy-{{ name }}:
   rabbitmq_policy:
-    - present
-    - name: {{ name }}
+    - {{ policy.get('state', 'present') }}
+    - name: {{ policy.get('name', name) }}
+    - vhost: {{ policy.get('vhost', '/') }}
     - pattern: '{{ policy['pattern'] }}'
     - definition: '{{ policy['definition'] }}'
     - require:

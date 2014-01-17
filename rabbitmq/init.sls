@@ -176,6 +176,9 @@ rabbitmq:
     - source: salt://rabbitmq/templates/rabbitmq-server.default.jinja
     - template: jinja
 
+####################
+## Plugin Management
+
 {% for name in salt['pillar.get']('rabbitmq:plugins', []) -%}
 "{{ name }}-rabbitmq-plugin":
   rabbitmq_plugin:
@@ -203,6 +206,21 @@ rabbitmq-server:
 {% endfor -%}
 {% endif -%}
 
+###################
+## VHost Management
+
+{% for name, vhost in salt['pillar.get']('rabbitmq:vhosts', {}).iteritems() -%}
+rabbit-{{ name }}-vhost:
+  rabbitmq_vhost:
+    - {{ vhost.get('state', 'present') }}
+    - name: {{ vhost.get('name', name) }}
+    - require:
+      - service: rabbitmq-server
+{% endfor %}
+
+##################
+## User Management
+
 {% set users = salt['pillar.get']('rabbitmq:users', False) -%}
 {% if users -%}
 
@@ -213,7 +231,8 @@ rabbitmq-server:
 rabbit-{{ name }}-user:
   rabbitmq_user:
     - {{ user.get('state', 'present') }}
-    - name: {{ name }}
+    - name: {{ user.get('name', name) }}
+    - force: {{ user.get('force', 'False') }}
     - password: {{ user.get('password', '~') }}
     - tags:  {{ user.get('tags', '~') }}
     - perms: {{ user.get('perms', []) | yaml }}
