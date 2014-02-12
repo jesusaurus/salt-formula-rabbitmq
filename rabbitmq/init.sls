@@ -79,6 +79,8 @@ rabbitmq:
       - file: /etc/rabbitmq/ssl
     - require_in:
       - pkg: rabbitmq-server
+    - watch_in:
+      - service: rabbitmq-server
 
 /etc/rabbitmq/ssl/cert.pem:
   file:
@@ -92,6 +94,8 @@ rabbitmq:
       - file: /etc/rabbitmq/ssl
     - require_in:
       - pkg: rabbitmq-server
+    - watch_in:
+      - service: rabbitmq-server
 
 /etc/rabbitmq/ssl/cert.key:
   file:
@@ -105,6 +109,8 @@ rabbitmq:
       - file: /etc/rabbitmq/ssl
     - require_in:
       - pkg: rabbitmq-server
+    - watch_in:
+      - service: rabbitmq-server
 {% endif -%}
 
 /var/lib/rabbitmq:
@@ -176,18 +182,6 @@ rabbitmq:
     - source: salt://rabbitmq/templates/rabbitmq-server.default.jinja
     - template: jinja
 
-####################
-## Plugin Management
-
-{% for name in salt['pillar.get']('rabbitmq:plugins', []) -%}
-"{{ name }}-rabbitmq-plugin":
-  rabbitmq_plugin:
-    - enabled
-    - name: "{{ name }}"
-    - require:
-      - pkg: rabbitmq-server
-{% endfor -%}
-
 rabbitmq-server:
   pkg:
     - installed
@@ -199,12 +193,23 @@ rabbitmq-server:
     - enable: True
     - require:
       - pkg: rabbitmq-server
-{% if salt['pillar.get']('rabbitmq:plugins', false) %}
     - watch:
-{% for name in salt['pillar.get']('rabbitmq:plugins', []) %}
-      - rabbitmq_plugin: "{{ name }}"
+      - file: /etc/rabbitmq/rabbitmq.config
+      - file: /var/lib/rabbitmq/.erlang.cookie
+
+####################
+## Plugin Management
+
+{% for name in salt['pillar.get']('rabbitmq:plugins', []) -%}
+"{{ name }}-rabbitmq-plugin":
+  rabbitmq_plugin:
+    - enabled
+    - name: "{{ name }}"
+    - require:
+      - pkg: rabbitmq-server
+    - watch_in:
+      - service: rabbitmq-server
 {% endfor -%}
-{% endif -%}
 
 ###################
 ## VHost Management
