@@ -157,6 +157,10 @@ rabbitmq:
       - user: rabbitmq
 {% endif %}
 
+{% set nodes = salt['pillar.get']('rabbitmq:cluster', {}).iterkeys() %}
+{% if not nodes %}
+{% set nodes = salt['pillar.get']('rabbitmq:nodes', []) %}
+{% endif %}
 /etc/rabbitmq/rabbitmq.config:
   file:
     - managed
@@ -166,7 +170,7 @@ rabbitmq:
     - group: root
     - mode: 644
     - context:
-        nodes: {{ salt['pillar.get']('rabbitmq:nodes', []) }}
+        nodes: {{ nodes }}
     - require:
       - file: /etc/rabbitmq
 

@@ -33,4 +33,9 @@ networking:
       - sysctl: net.ipv4.tcp_keepalive_intvl
       - sysctl: net.ipv4.tcp_keepalive_probes
 
-
+{% for host, ip in salt['pillar.get']('rabbitmq:cluster', {}).iteritems() %}
+rabbit_host_{{host}}:
+  host.present:
+    - name: {{ host }}
+    - ip: {{ ip }}
+{% endfor %}
